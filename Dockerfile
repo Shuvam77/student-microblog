@@ -23,4 +23,5 @@ COPY . /code/
 #commands
 #docker build --tag NAME_ANYTHING .
 #docker run --publish 8000:8000 NAME_SAME
-#docker exec -it django_app/bin/bash
+#docker exec -it django_app /bin/bash
+#docker exec -it docker_app sh (for alpine build)
