@@ -25,7 +25,7 @@ class Room(models.Model):
     class Meta:
         verbose_name = "room"
         verbose_name_plural = "rooms"
-        ordering = ['name']
+        ordering = ['-updated', '-created']
 
     def __str__(self):
         return f'{self.name}'
