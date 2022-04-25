@@ -3,6 +3,10 @@ from django.urls import path
 from . import views 
 
 urlpatterns = [
+    path('login/', views.loginPage, name='login' ),
+    path('logout/', views.logoutUser, name='logout' ),
+
+
     path('', views.Home, name='home_index'),
     path('room/<int:id>/', views.RoomView, name='room_detail'),
     path('create-room/', views.createRoom, name='create-room'),

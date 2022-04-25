@@ -3,9 +3,40 @@ from django.shortcuts import get_object_or_404, redirect, render
 from base.forms import RoomForm
 from .models import Room, Topic
 from django.db.models import Q
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 
 
 # Create your views here.
+def loginPage(request):
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        try:
+            user = User.objects.get(username=username)
+        except:
+            messages.error(request, 'User doesnot exists!')
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home_index')
+        else:
+            messages.error(request, 'Username or Password doesnot match!')
+
+    context = {}
+    return render(request, 'base/login_register.html', context)
+
+
+def logoutUser(request):
+    logout(request)
+    return redirect('home_index')
+
+
+
 def RoomView(request, id):
     # room = Room.objects.get(pk=id)
     room = get_object_or_404(Room, pk=id)
