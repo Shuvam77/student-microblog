@@ -1,8 +1,9 @@
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from base.forms import RoomForm
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -65,7 +66,19 @@ def registerUser(request):
 def RoomView(request, id):
     # room = Room.objects.get(pk=id)
     room = get_object_or_404(Room, pk=id)
-    context = {'room': room}
+    room_messages = room.message_set.all().order_by('-created')
+    participants = room.participants.all()
+
+    if request.method == 'POST':
+        message = Message.objects.create(
+            user = request.user,
+            room = room,
+            body=request.POST.get('body')
+        )
+        room.participants.add(request.user)
+        return redirect('room_detail', id=room.id)
+
+    context = {'room': room, 'room_messages': room_messages, 'participants':participants}
     return render(request, './base/room.html', context)
 
 
@@ -75,7 +88,7 @@ def Home(request):
             Q(topic__name__icontains=query)|Q(name__icontains=query)|Q(description__icontains=query))
 
     # rooms = Room.objects.all()
-    topics = Topic.objects.all()
+    topics = Topic.objects.all().annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
 
     room_count = rooms.count()
 
@@ -121,9 +134,24 @@ def deleteRoom(request, id):
     if request.user != room.host:
         return HttpResponse('You are not allowed to make changes!!')
 
-    context = {'room':room}
     if request.method == 'POST':
         room.delete()
         return redirect('home_index')
 
+    context = {'obj':room}
+    return render(request, 'base/delete.html',context)
+
+
+@login_required(login_url='login')
+def deleteMessage(request, id):
+    message = get_object_or_404(Message, pk=id)
+
+    if request.user != message.user:
+        return HttpResponse('You are not allowed to make changes!!')
+
+    if request.method == 'POST':
+        message.delete()
+        return redirect('room_detail', id=message.room.id)
+
+    context = {'obj':message}
     return render(request, 'base/delete.html',context)

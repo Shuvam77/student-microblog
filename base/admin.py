@@ -11,12 +11,15 @@ class CustomPermissionMixin:
 
         if not is_superuser:
             form.base_fields['name'].disabled = True
+
+            
+            def has_delete_permission(self, request, obj=None):
+                return False
+            def has_add_permission(self, request):
+                return False
         return form
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-    def has_add_permission(self, request):
-        return False
+
 
 
 class RoomAdmin(CustomPermissionMixin, admin.ModelAdmin):
