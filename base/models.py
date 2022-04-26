@@ -42,6 +42,7 @@ class Message(models.Model):
     class Meta:
         verbose_name = "message"
         verbose_name_plural = "messages"
+        ordering = ['-updated', '-created']
 
     def __str__(self):
         return f'{self.body[0:50]} commented by {self.user.username}'

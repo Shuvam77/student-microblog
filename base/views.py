@@ -90,9 +90,12 @@ def Home(request):
     # rooms = Room.objects.all()
     topics = Topic.objects.all().annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
 
+    room_messages = Message.objects.filter(
+                    Q(room__topic__name__icontains=query))
+
     room_count = rooms.count()
 
-    context = {'rooms': rooms, 'topics': topics, 'room_count': room_count}
+    context = {'rooms': rooms, 'topics': topics, 'room_count': room_count, 'room_messages': room_messages}
     return render(request, './base/home.html', context)
 
 
