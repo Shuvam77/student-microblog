@@ -209,3 +209,19 @@ def updateUser(request):
 
     context = {'form': form}
     return render(request, 'base/edit-user.html', context)
+
+
+def topicsPage(request):
+    query = request.GET.get('q') if request.GET.get('q') != None else ''
+
+    topics = Topic.objects.all().filter(Q(name__icontains=query)).annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    rooms = Room.objects.all()
+    
+    room_count = rooms.count()
+    context = {'topics':topics, 'room_count': room_count}
+    return render(request, 'base/topics.html', context)
+
+def activityPage(request):
+    room_messages = Message.objects.all().order_by('-created')
+    context = {'room_messages':room_messages}
+    return render(request, 'base/activity.html', context)
