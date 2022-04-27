@@ -98,7 +98,7 @@ def Home(request):
     context = {'rooms': rooms, 'topics': topics, 'room_count': room_count, 'room_messages': room_messages}
     return render(request, './base/home.html', context)
 
-
+@login_required(login_url='login')
 def userProfile(request, id):
     user = get_object_or_404(User, pk=id)
     rooms = user.room_set.all()
@@ -114,13 +114,26 @@ def userProfile(request, id):
 @login_required(login_url='login')
 def createRoom(request):
     form = RoomForm
+    topics = Topic.objects.all()
     if request.method == 'POST':
-        form = RoomForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('home_index')
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+        Room.objects.create(
+            host=request.user,
+            topic=topic,
+            name=request.POST.get('name'),
+            description=request.POST.get('description')
+        )
+        return redirect('home_index')
 
-    context={'form': form}
+        # form = RoomForm(request.POST)
+        # if form.is_valid():
+        #     context = form.save(commit=False)
+        #     context.host = request.user
+        #     context.save()
+        #     return redirect('home_index')
+
+    context={'form': form, 'topics':topics}
     return render(request, 'base/room_form.html', context)
 
 
@@ -128,17 +141,29 @@ def createRoom(request):
 def updateRoom(request, id):
     room = get_object_or_404(Room, pk=id)
     form = RoomForm(instance=room)
+    topics = Topic.objects.all()
 
     if request.user != room.host:
         return HttpResponse('You are not allowed to make changes!!')
 
     if request.method == 'POST':
-        form = RoomForm(request.POST, instance=room)
-        if form.is_valid():
-            form.save()
-            return redirect('home_index')
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+
+        room.name = request.POST.get('name')
+        room.topic = topic
+        room.description = request.POST.get('description')
+        room.save()
+
+        return redirect('home_index')
+
+    # if request.method == 'POST':
+    #     form = RoomForm(request.POST, instance=room)
+    #     if form.is_valid():
+    #         form.save()
+    #         return redirect('home_index')
     
-    context={'form': form}
+    context={'form': form, 'topics':topics, 'room':room}
     return render(request, 'base/room_form.html', context)
 
 
