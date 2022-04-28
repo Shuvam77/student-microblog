@@ -1,13 +1,14 @@
+from pyexpat import model
 from django.forms import ModelForm
-from .models import Room
-from django.contrib.auth.models import User
-
+from .models import Room, User
 
 from crispy_forms.bootstrap import Field, InlineRadios, TabHolder, Tab
 from crispy_forms.layout import Submit, Layout, Div, Fieldset
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
+from django.contrib.auth.forms import UserCreationForm
+
 
 class RoomForm(ModelForm):
     
@@ -35,4 +36,9 @@ class RoomForm(ModelForm):
 class UserForm(ModelForm):
     class Meta:
         model = User
-        fields= ['username', 'email']
+        fields= ['username', 'email', 'name', 'bio', 'avatar']
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        model= User
+        fields = ['name', 'username', 'email', 'password1', 'password2']

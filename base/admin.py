@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from base.models import Room, Topic, Message
+from base.models import Room, Topic, Message, User
+
 
 # Register your models here.
 
@@ -27,6 +28,6 @@ class RoomAdmin(CustomPermissionMixin, admin.ModelAdmin):
     readonly_field = ('created', 'updated')
 
 admin.site.register(Room, RoomAdmin)
-
+admin.site.register(User)
 admin.site.register(Topic)
 admin.site.register(Message)

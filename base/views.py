@@ -2,15 +2,12 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from base.forms import RoomForm, UserForm
-from .models import Room, Topic, Message
+from base.forms import RoomForm, UserForm, CustomUserCreationForm
+from .models import Room, Topic, Message, User
 from django.db.models import Q
-from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-
 
 # Create your views here.
 def loginPage(request):
@@ -45,11 +42,11 @@ def logoutUser(request):
 
 
 def registerUser(request):
-    form = UserCreationForm()
+    form = CustomUserCreationForm()
     context = {'form':form}
 
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
@@ -98,7 +95,7 @@ def Home(request):
     context = {'rooms': rooms, 'topics': topics, 'room_count': room_count, 'room_messages': room_messages}
     return render(request, './base/home.html', context)
 
-@login_required(login_url='login')
+# @login_required(login_url='login')
 def userProfile(request, id):
     user = get_object_or_404(User, pk=id)
     rooms = user.room_set.all()
@@ -202,8 +199,9 @@ def updateUser(request):
     form = UserForm(instance=user)
 
     if request.method == 'POST':
-        form = UserForm(request.POST, instance=user)
+        form = UserForm(request.POST, request.FILES ,instance=user)
         if form.is_valid():
+            
             form.save()
             return redirect ('user-profile', id=user.id)
 
