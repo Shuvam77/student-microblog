@@ -223,3 +223,22 @@ def activityPage(request):
     room_messages = Message.objects.all().order_by('-created')
     context = {'room_messages':room_messages}
     return render(request, 'base/activity.html', context)
+
+
+def roomFollowToggle(request, id):
+    roomPatObj = Room.objects.get(pk=id)
+    currentUserobj = User.objects.get(pk=request.user.id )
+    following = roomPatObj.participants.all()
+
+    room_messages = roomPatObj.message_set.all().order_by('-created')
+
+
+    if roomPatObj.host.username != currentUserobj.username:
+        if currentUserobj in following:
+            roomPatObj.participants.remove(currentUserobj.id)
+
+        else:
+            roomPatObj.participants.add(currentUserobj.id)
+
+    context={'room':roomPatObj, 'participants':following, 'room_messages':room_messages}
+    return render(request, 'base/room.html', context)

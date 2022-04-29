@@ -78,6 +78,15 @@
               <div class="room__info">
                 <h3>{{room.name}}</h3>
                 <span>{{room.created|timesince}} ago</span>
+                {% if request.user.id  != room.host.id %}
+                  {% if user.is_authenticated %}
+                    {% if user in room.participants.all%} 
+                    <a href="{% url 'roomfollowToggle' room.id  %}" class="btn btn-primary">Unfollow</a>
+                    {% else %}
+                    <a href="{% url 'roomfollowToggle' room.id  %}" class="btn btn-primary">follow</a>
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
               </div>
               <div class="room__hosted">
                 <p>Hosted By</p>
