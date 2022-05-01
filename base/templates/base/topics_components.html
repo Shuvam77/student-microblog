@@ -8,7 +8,7 @@
     </li>
     {% for topic in topics %}
     <li>
-      <a href="{% url 'home_index' %}?q={{topic.name}}">{{topic.name}} <span>{{topic.num_of_topic}}</span></a>
+      <a href="{% url 'home_index' %}?q={{topic.name}}">{{topic.name}} <span>{{topic.topics.all.count}}</span></a>
     </li>
     {% endfor %}
   </ul>

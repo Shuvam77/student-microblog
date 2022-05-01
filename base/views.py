@@ -1,3 +1,4 @@
+from unicodedata import name
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -8,6 +9,8 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+
+from django.template.defaulttags import register
 
 # Create your views here.
 def loginPage(request):
@@ -66,6 +69,8 @@ def RoomView(request, id):
     room_messages = room.message_set.all().order_by('-created')
     participants = room.participants.all()
 
+    room_topics = room.topic.all()
+
     if request.method == 'POST':
         message = Message.objects.create(
             user = request.user,
@@ -75,22 +80,24 @@ def RoomView(request, id):
         room.participants.add(request.user)
         return redirect('room_detail', id=room.id)
 
-    context = {'room': room, 'room_messages': room_messages, 'participants':participants}
+    context = {'room': room, 'room_messages': room_messages, 'participants':participants, 'room_topics':room_topics}
     return render(request, './base/room.html', context)
 
 
 def Home(request):
-    query = request.GET.get('q') if request.GET.get('q') != None else ''
-    rooms = Room.objects.filter(
-            Q(topic__name__icontains=query)|Q(name__icontains=query)|Q(description__icontains=query))
-
+    query = request.GET.get('q') 
+    if request.GET.get('q'):
+        rooms = Room.objects.filter(
+                Q(topic__name__icontains=query)|Q(name__icontains=query)|Q(description__icontains=query))
+        room_messages = Message.objects.filter(Q(room__topic__name__icontains=query))
+    else :
+        rooms = Room.objects.all()
+        room_messages = Message.objects.all()
     # rooms = Room.objects.all()
-    topics = Topic.objects.all().annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    # topics = Topic.objects.annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    topics=Topic.objects.all().annotate(num_of_topic=Count('topics')).order_by('-num_of_topic')
 
-    room_messages = Message.objects.filter(
-                    Q(room__topic__name__icontains=query))
-
-    room_count = rooms.count()
+    room_count = Room.objects.all().count()
 
     context = {'rooms': rooms, 'topics': topics, 'room_count': room_count, 'room_messages': room_messages}
     return render(request, './base/home.html', context)
@@ -99,7 +106,8 @@ def Home(request):
 def userProfile(request, id):
     user = get_object_or_404(User, pk=id)
     rooms = user.room_set.all()
-    topics = Topic.objects.all().annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    # topics = Topic.objects.all().annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    topics = Topic.objects.all()
     room_message = user.message_set.all()
 
     room_count = rooms.count()
@@ -113,14 +121,19 @@ def createRoom(request):
     form = RoomForm
     topics = Topic.objects.all()
     if request.method == 'POST':
+
         topic_name = request.POST.get('topic')
-        topic, created = Topic.objects.get_or_create(name=topic_name)
-        Room.objects.create(
+        list_topics = [x.strip() for x in topic_name.split(',')]
+        dict_list=[]
+        for x in list_topics:
+            topic, created = Topic.objects.get_or_create(name=x)
+            dict_list.append(topic)
+        room = Room.objects.create(
             host=request.user,
-            topic=topic,
             name=request.POST.get('name'),
             description=request.POST.get('description')
-        )
+            )
+        room.topic.add(*dict_list)
         return redirect('home_index')
 
         # form = RoomForm(request.POST)
@@ -137,7 +150,15 @@ def createRoom(request):
 @login_required(login_url='login')
 def updateRoom(request, id):
     room = get_object_or_404(Room, pk=id)
-    form = RoomForm(instance=room)
+
+    # room_topic = room.topic.all()
+    # list_room = []
+    # for x in room_topic:
+    #     list_room.append(x)
+    # str_topic =  ''.join(map(str,list_room))
+
+    form = RoomForm(instance=room,)
+    # form.fields['topic'].queryset = room.topic.all()
     topics = Topic.objects.all()
 
     if request.user != room.host:
@@ -145,10 +166,15 @@ def updateRoom(request, id):
 
     if request.method == 'POST':
         topic_name = request.POST.get('topic')
-        topic, created = Topic.objects.get_or_create(name=topic_name)
+        list_topics = [x.strip() for x in topic_name.split(',')]
+        dict_list=[]
+        for x in list_topics:
+            topic, created = Topic.objects.get_or_create(name=x)
+            dict_list.append(topic)
 
         room.name = request.POST.get('name')
-        room.topic = topic
+        room.topic.clear()
+        room.topic.add(*dict_list)
         room.description = request.POST.get('description')
         room.save()
 
@@ -162,6 +188,15 @@ def updateRoom(request, id):
     
     context={'form': form, 'topics':topics, 'room':room}
     return render(request, 'base/room_form.html', context)
+
+
+@register.filter
+def get_item(object):
+    list_room = []
+    for x in object:
+        list_room.append(x)
+    str_topic =  ', '.join(map(str,list_room))
+    return str_topic
 
 
 @login_required(login_url='login')
