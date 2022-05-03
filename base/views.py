@@ -2,6 +2,7 @@ from unicodedata import name
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from base.forms import RoomForm, UserForm, CustomUserCreationForm
 from .models import Room, Topic, Message, User
@@ -150,13 +151,6 @@ def createRoom(request):
 @login_required(login_url='login')
 def updateRoom(request, id):
     room = get_object_or_404(Room, pk=id)
-
-    # room_topic = room.topic.all()
-    # list_room = []
-    # for x in room_topic:
-    #     list_room.append(x)
-    # str_topic =  ''.join(map(str,list_room))
-
     form = RoomForm(instance=room,)
     # form.fields['topic'].queryset = room.topic.all()
     topics = Topic.objects.all()
@@ -247,7 +241,7 @@ def updateUser(request):
 def topicsPage(request):
     query = request.GET.get('q') if request.GET.get('q') != None else ''
 
-    topics = Topic.objects.all().filter(Q(name__icontains=query)).annotate(num_of_topic = Count('room')).order_by('-num_of_topic')
+    topics = Topic.objects.all().filter(Q(name__icontains=query)).annotate(num_of_topic = Count('topics')).order_by('-num_of_topic')
     rooms = Room.objects.all()
     
     room_count = rooms.count()
@@ -271,9 +265,10 @@ def roomFollowToggle(request, id):
     if roomPatObj.host.username != currentUserobj.username:
         if currentUserobj in following:
             roomPatObj.participants.remove(currentUserobj.id)
-
         else:
             roomPatObj.participants.add(currentUserobj.id)
-
-    context={'room':roomPatObj, 'participants':following, 'room_messages':room_messages}
-    return render(request, 'base/room.html', context)
+    roomPatObj.save()
+    
+    # context={'room':roomPatObj, 'participants':following, 'room_messages':room_messages}
+    return redirect ('room_detail', id=roomPatObj.id)
+    # return render(request, 'base/room.html', context)
