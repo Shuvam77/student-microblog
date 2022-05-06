@@ -40,11 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #LOCAL
-    'base.apps.BaseConfig',
-
     #THIRD-PARTY
     'crispy_forms',
+    'rest_framework',
+    
+    #LOCAL
+    'base.apps.BaseConfig',
+    'api.apps.ApiConfig',
 ]
 
 AUTH_USER_MODEL = 'base.User' 

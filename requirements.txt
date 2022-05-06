@@ -13,6 +13,7 @@ Deprecated==1.2.13
 distlib==0.3.4
 Django==4.0.4
 django-crispy-forms==1.14.0
+djangorestframework==3.13.1
 filelock==3.6.0
 kombu==5.2.4
 packaging==21.3
