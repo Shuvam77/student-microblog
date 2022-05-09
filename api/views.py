@@ -36,6 +36,8 @@ class RoomCreateAPIView(generics.CreateAPIView):
         host = get_object_or_404(User, id=self.request.user.id)
         return serializer.save(host = host)
 
+# Haven't completed this one need to do more research and after that complete the api setting.
+
 
 
 
